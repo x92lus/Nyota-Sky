@@ -596,11 +596,16 @@
             .weather-data {
                 width: 100%; /* Force full width for weather data section */
             }
-            .weather-cards .card { width: calc(100% / 3 - 10px); } /* Adjusted for 3 columns on tablets */
-            .current-weather { flex-direction: column; align-items: center; text-align: center; }
+            .current-weather { 
+                flex-direction: column; 
+                align-items: center; /* Center items horizontally when stacked */
+                text-align: center; 
+                width: 100%; /* Ensure it takes full width of its parent */
+            }
             .current-weather .icon { margin-top: 20px; }
             .current-weather .icon img { max-width: 150px; }
             .current-weather .icon h4 { margin-top: -10px; }
+            .weather-cards .card { width: calc(100% / 3 - 10px); } /* Adjusted for 3 columns on tablets */
         }
 
         @media (max-width: 768px) {
