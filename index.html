@@ -5,8 +5,8 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Nyota-Sky</title>
     <!-- Préchargement des ressources clés -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@600;700&display=swap" rel="stylesheet"></noscript>
     
     <!-- Librairies externes pour la carte, les icônes -->
     <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
@@ -15,160 +15,201 @@
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
     <style>
-        /* Importation de la police Google Fonts */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        /* Variables CSS pour la palette de couleurs */
+        :root {
+            --color-primary-light: #F0F2F5; /* Arrière-plan clair doux */
+            --color-secondary-light: #FFFFFF; /* Fond des cartes clair */
+            --color-text-light: #2C3E50; /* Texte foncé pour mode clair */
+            --color-accent-light: #3498DB; /* Bleu accent pour mode clair */
+            --color-border-light: #E0E0E0; /* Bordures claires */
+            --color-separator-light: #BDC3C7; /* Séparateur clair */
+            --color-button-secondary-light: #95A5A6; /* Bouton gris clair */
+            --color-button-secondary-hover-light: #7F8C8D; /* Bouton gris clair hover */
+
+            --color-primary-dark: #1A1A2E; /* Arrière-plan sombre profond */
+            --color-secondary-dark: #16213E; /* Fond des cartes sombre */
+            --color-text-dark: #E0E0E0; /* Texte clair pour mode sombre */
+            --color-accent-dark: #4CAF50; /* Vert accent pour mode sombre (ou un bleu plus lumineux si préféré) */
+            --color-border-dark: #2C3E50; /* Bordures sombres */
+            --color-separator-dark: #34495E; /* Séparateur sombre */
+            --color-button-secondary-dark: #34495E; /* Bouton gris sombre */
+            --color-button-secondary-hover-dark: #4A6480; /* Bouton gris sombre hover */
+
+            --color-main-blue: #007aff; /* Bleu iOS pour les éléments interactifs/actifs */
+            --color-main-blue-hover: #006ee6; /* Bleu iOS hover */
+        }
+
+        /* Importation des polices Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@600;700&display=swap');
 
         * {
             padding: 0;
             margin: 0;
             box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', sans-serif; /* Police par défaut pour le contenu */
         }
 
         /* Thème clair (par défaut) */
         body {
-            background: #f2f2f7; /* iOS-like light background */
-            color: #1c1c1e; /* Dark text */
+            background: var(--color-primary-light);
+            color: var(--color-text-light);
             transition: background-color 0.3s, color 0.3s;
         }
 
         /* Thème sombre */
         body.dark-mode {
-            background-color: #000000; /* Pure black for dark mode */
-            color: #f2f2f7; /* Light text */
+            background-color: var(--color-primary-dark);
+            color: var(--color-text-dark);
         }
         
         body.dark-mode header,
         body.dark-mode .footer {
-            background-color: #1c1c1e; /* Darker header/footer */
+            background-color: var(--color-secondary-dark);
         }
         
         body.dark-mode .weather-input .separator::before {
-            background: #000000; /* Match dark mode body background */
-            color: #8e8e93;
+            background: var(--color-primary-dark);
+            color: var(--color-text-dark);
         }
         
         body.dark-mode .card,
         body.dark-mode .current-weather,
         body.dark-mode .astro-card,
         body.dark-mode .weather-input {
-            background-color: #1c1c1e; /* Dark card background */
-            color: #f2f2f7;
-            box-shadow: 0 4px 8px rgba(255, 255, 255, 0.05); /* Subtle light shadow for dark mode */
+            background-color: var(--color-secondary-dark);
+            color: var(--color-text-dark);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Ombre plus prononcée en mode sombre */
         }
         body.dark-mode .weather-input input, body.dark-mode .weather-input button {
-            border-color: #3a3a3c;
-            background-color: #2c2c2e;
-            color: #f2f2f7;
+            border-color: var(--color-border-dark);
+            background-color: var(--color-primary-dark);
+            color: var(--color-text-dark);
         }
         body.dark-mode .weather-input input:focus {
-            border-color: #0a84ff; /* iOS blue highlight */
-            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+            border-color: var(--color-main-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
         }
         body.dark-mode .weather-input .search-btn {
-            background: #0a84ff; /* iOS blue */
+            background: var(--color-main-blue);
         }
         body.dark-mode .weather-input .search-btn:hover {
-            background: #007aff;
+            background: var(--color-main-blue-hover);
         }
         body.dark-mode .weather-input .location-btn {
-            background: #3a3a3c; /* Dark grey */
+            background: var(--color-button-secondary-dark);
         }
         body.dark-mode .weather-input .location-btn:hover {
-            background: #48484a;
+            background: var(--color-button-secondary-hover-dark);
         }
         body.dark-mode .current-weather {
-            background: #0a84ff; /* iOS blue */
+            background: var(--color-main-blue); /* Garde le bleu pour la météo actuelle */
+            color: var(--color-text-dark); /* Texte clair sur fond bleu */
         }
-        body.dark-mode .days-forecast h5, body.dark-mode .astro-section h5 {
-            color: #f2f2f7;
+        body.dark-mode .current-weather h4 {
+            color: rgba(255, 255, 255, 0.8); /* Texte légèrement transparent */
+        }
+        body.dark-mode .section-title {
+            color: var(--color-text-dark);
         }
         body.dark-mode .astro-card h6 {
-            color: #0a84ff; /* iOS blue */
-            border-bottom-color: #3a3a3c;
+            color: var(--color-main-blue);
+            border-bottom-color: var(--color-border-dark);
         }
         body.dark-mode .astro-card p, body.dark-mode .astro-card li {
-            color: #e0e0e0;
+            color: var(--color-text-dark);
         }
         body.dark-mode .moon-display {
-            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
         body.dark-mode .tab-button.active {
-            background-color: #1c1c1e;
-            color: #f2f2f7;
+            background-color: var(--color-secondary-dark);
+            color: var(--color-text-dark);
         }
         body.dark-mode .tab-button {
-            background-color: #000000;
-            border-color: #3a3a3c;
-            color: #8e8e93;
+            background-color: var(--color-primary-dark);
+            border-color: var(--color-border-dark);
+            color: var(--color-text-dark);
         }
         body.dark-mode #windy,
         body.dark-mode iframe {
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
+        body.dark-mode .weather-cards::-webkit-scrollbar-track {
+            background: var(--color-secondary-dark);
+        }
+        body.dark-mode .weather-cards::-webkit-scrollbar-thumb {
+            background: var(--color-accent-dark);
+        }
+        body.dark-mode .astro-card p strong {
+            color: var(--color-accent-dark);
+        }
+        body.dark-mode .astro-card small {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
 
         /* Style du titre principal */
         header {
             position: sticky;
             top: 0;
-            z-index: 1000; /* Ensure it stays on top */
-            color: #1c1c1e; /* Dark text for light mode */
+            z-index: 1000;
+            color: var(--color-text-light);
             padding: 25px 0;
             text-align: center;
-            background: #f2f2f7; /* Match body background */
-            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08); /* Subtle bottom shadow */
-            font-weight: 700;
+            background: var(--color-secondary-light);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+            font-family: 'Montserrat', sans-serif; /* Nouvelle police pour les titres */
         }
         header h1 {
-            font-size: 2.5rem; /* Larger title */
+            font-size: 2.8rem; /* Plus grand */
             margin-bottom: 5px;
+            font-weight: 700;
         }
         header .header-description {
-            font-size: 1.1rem; /* Smaller subtitle */
-            color: #555;
+            font-size: 1.2rem; /* Plus lisible */
+            color: var(--color-text-light);
             font-weight: 400;
         }
-        /* Correction pour la visibilité du titre en mode sombre */
         body.dark-mode header h1,
         body.dark-mode header .header-description {
-            color: #f2f2f7; /* Texte clair en mode sombre */
+            color: var(--color-text-dark);
         }
 
 
         /* Style du bouton de changement de thème */
         .dark-mode-toggle {
             position: absolute;
-            background: #e0e0e0; /* Light grey background in light mode */
+            background: var(--color-primary-light);
             right: 5%;
             top: 50%;
             transform: translateY(-50%);
-            border: 1px solid #c0c0c0; /* Light border */
-            color: #1c1c1e; /* Dark text/icon in light mode */
+            border: 1px solid var(--color-border-light);
+            color: var(--color-text-light);
             cursor: pointer;
             font-size: 1.8rem;
             transition: all 0.2s ease;
-            padding: 10px; /* Increase touch target */
-            border-radius: 50%; /* Make it round */
+            padding: 10px;
+            border-radius: 50%;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         .dark-mode-toggle:hover {
             transform: translateY(-50%) scale(1.1);
-            background: #d0d0d0;
+            background: var(--color-border-light);
         }
         .dark-mode-toggle:focus-visible {
-            outline: 2px solid #007aff;
+            outline: 2px solid var(--color-main-blue);
             outline-offset: 2px;
             border-radius: 50%;
         }
         body.dark-mode .dark-mode-toggle {
-            background-color: #2c2c2e; /* Darker background in dark mode */
-            border-color: #3a3a3a; /* Darker border */
-            color: #f2f2f7; /* Light text/icon in dark mode */
-            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+            background-color: var(--color-secondary-dark);
+            border-color: var(--color-border-dark);
+            color: var(--color-text-dark);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
         body.dark-mode .dark-mode-toggle:hover {
-            background-color: #3a3a3a;
-            color: #0a84ff; /* iOS blue on hover in dark mode */
+            background-color: var(--color-border-dark);
+            color: var(--color-main-blue);
         }
 
 
@@ -185,17 +226,19 @@
             width: 350px;
             flex-shrink: 0;
             padding: 20px;
-            background: #ffffff;
+            background: var(--color-secondary-light);
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            position: sticky; /* Make it sticky */
-            top: calc(25px + 2.2rem + 25px); /* Height of header + its padding */
+            position: sticky;
+            top: calc(25px + 2.8rem + 25px); /* Ajusté pour la nouvelle taille du header */
         }
 
         .weather-input h3 {
-            font-size: 1.2rem;
+            font-size: 1.3rem; /* Plus grand */
             margin-bottom: 15px;
-            color: #1c1c1e;
+            color: var(--color-text-light);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
         }
 
         .weather-input input, .weather-input button {
@@ -204,20 +247,20 @@
             outline: none;
             font-size: 1rem;
             border-radius: 10px;
-            border: 1px solid #e0e0e0;
+            border: 1px solid var(--color-border-light);
             transition: all 0.3s ease;
             font-weight: 500;
-            padding: 0 15px; /* Added padding for touch target */
+            padding: 0 15px;
         }
 
         .weather-input input {
             margin: 10px 0 20px 0;
-            background-color: #f9f9fb;
-            color: #1c1c1e;
+            background-color: var(--color-primary-light);
+            color: var(--color-text-light);
         }
         .weather-input input:focus-visible {
-            border-color: #0a84ff;
-            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+            border-color: var(--color-main-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
             outline: none;
         }
         
@@ -225,20 +268,20 @@
             cursor: pointer;
             border: none;
             color: #fff;
-            background: #007aff;
+            background: var(--color-main-blue);
             transition: background 0.2s ease, transform 0.1s ease;
             font-weight: 600;
             letter-spacing: 0.2px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            padding: 10px 15px; /* Increased padding for touch target */
+            padding: 10px 15px;
         }
         
         .weather-input .search-btn:hover {
-            background: #006ee6;
+            background: var(--color-main-blue-hover);
             transform: translateY(-1px);
         }
         .weather-input .search-btn:focus-visible {
-            outline: 2px solid #007aff;
+            outline: 2px solid var(--color-main-blue);
             outline-offset: 2px;
             border-radius: 10px;
         }
@@ -247,7 +290,7 @@
             height: 1px;
             width: 100%;
             margin: 25px 0;
-            background: #e0e0e0;
+            background: var(--color-separator-light);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -256,23 +299,23 @@
         
         .weather-input .separator::before {
             content: " ou ";
-            color: #8e8e93;
+            color: var(--color-text-light);
             font-size: 1rem;
             padding: 0 10px;
-            background: #f2f2f7;
+            background: var(--color-primary-light);
             position: absolute;
         }
         
         .weather-input .location-btn {
-            background: #8e8e93;
+            background: var(--color-button-secondary-light);
         }
         
         .weather-input .location-btn:hover {
-            background: #7c7c80;
+            background: var(--color-button-secondary-hover-light);
             transform: translateY(-1px);
         }
         .weather-input .location-btn:focus-visible {
-            outline: 2px solid #007aff;
+            outline: 2px solid var(--color-main-blue);
             outline-offset: 2px;
             border-radius: 10px;
         }
@@ -293,8 +336,8 @@
         }
         
         .current-weather {
-            color: #1c1c1e;
-            background: #ffffff;
+            color: var(--color-text-light);
+            background: var(--color-secondary-light);
             border-radius: 12px;
             padding: 25px;
             display: flex;
@@ -308,21 +351,34 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
         }
         
-        .current-weather h2 { font-size: 2.2rem; margin-bottom: 8px; font-weight: 600; }
-        .current-weather h4 { font-size: 1.1rem; margin-top: 6px; font-weight: 400; color: #555; }
-        body.dark-mode .current-weather h4 { color: #e0e0e0; }
+        .current-weather h2 { 
+            font-size: 2.4rem; /* Plus grand */
+            margin-bottom: 8px; 
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .current-weather h4 { 
+            font-size: 1.1rem; 
+            margin-top: 6px; 
+            font-weight: 400; 
+            color: var(--color-text-light); /* Utilise la variable */
+        }
+        body.dark-mode .current-weather h4 { 
+            color: rgba(255, 255, 255, 0.8); 
+        }
         .current-weather .icon { text-align: center; }
         .current-weather .icon img { max-width: 150px; margin-top: -20px; margin-bottom: -10px; }
         .current-weather .icon h4 { margin-top: -10px; text-transform: capitalize; font-size: 1.1rem; font-weight: 500;}
         
         .section-title {
-            font-size: 1.7rem;
+            font-size: 1.8rem; /* Plus grand */
             margin: 25px 0 20px 0;
-            color: #1c1c1e;
-            font-weight: 600;
+            color: var(--color-text-light);
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
         }
         body.dark-mode .section-title {
-            color: #f2f2f7;
+            color: var(--color-text-dark);
         }
         
         .weather-cards {
@@ -335,10 +391,10 @@
         
         .card {
             list-style: none;
-            color: #1c1c1e;
+            color: var(--color-text-light);
             padding: 18px;
             border-radius: 10px;
-            background: #ffffff;
+            background: var(--color-secondary-light);
             width: calc(100% / 5 - 12px);
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -351,10 +407,22 @@
             transform: translateY(-3px);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
         }
-        .card h3 { font-size: 1.1rem; margin-bottom: 8px; font-weight: 500; }
-        .card img { max-width: 70px; margin: 5px 0 -5px 0; loading: lazy; } /* Lazy load for weather icons */
-        .card h4 { font-size: 0.95rem; margin-top: 5px; font-weight: 400; color: #555;}
-        body.dark-mode .card h4 { color: #e0e0e0; }
+        .card h3 { 
+            font-size: 1.2rem; /* Plus grand */
+            margin-bottom: 8px; 
+            font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .card img { max-width: 70px; margin: 5px 0 -5px 0; loading: lazy; }
+        .card h4 { 
+            font-size: 1rem; /* Plus lisible */
+            margin-top: 5px; 
+            font-weight: 400; 
+            color: var(--color-text-light);
+        }
+        body.dark-mode .card h4 { 
+            color: var(--color-text-dark); 
+        }
 
         .astro-details {
             display: grid;
@@ -363,8 +431,8 @@
         }
         
         .astro-card {
-            background: #ffffff;
-            color: #1c1c1e;
+            background: var(--color-secondary-light);
+            color: var(--color-text-light);
             padding: 25px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -376,40 +444,43 @@
         }
 
         .astro-card h6 {
-            font-size: 1.2rem;
+            font-size: 1.3rem; /* Plus grand */
             margin-bottom: 12px;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid var(--color-border-light);
             padding-bottom: 8px;
-            color: #007aff;
+            color: var(--color-accent-light); /* Accent pour les titres de section astro */
             font-weight: 600;
+            font-family: 'Montserrat', sans-serif;
         }
         
         .astro-card p, .astro-card li {
-            font-size: 0.95rem;
+            font-size: 1rem; /* Plus lisible */
             line-height: 1.6;
-            color: #555;
+            color: var(--color-text-light);
         }
         
         /* Style pour les heures du crépuscule astronomique */
         .astro-card p strong {
-            font-size: 1.3rem; /* Larger for readability */
-            font-weight: 700; /* Extra bold */
-            color: #007aff; /* Blue color for emphasis */
-            display: inline-block; /* To allow margin/padding if needed */
+            font-size: 1.4rem; /* Encore plus grand pour la lisibilité */
+            font-weight: 700;
+            color: var(--color-accent-light); /* Couleur accentuée */
+            display: inline-block;
             margin-left: 5px;
         }
         body.dark-mode .astro-card p strong {
-            color: #94d0ff; /* Lighter blue for dark mode */
+            color: var(--color-accent-dark);
         }
 
         .astro-card small {
-            display: block; /* Ensure it's on its own line */
+            display: block;
             margin-top: 10px;
-            font-size: 0.85rem;
-            color: #8e8e93;
+            font-size: 0.9rem; /* Légèrement plus grand */
+            color: var(--color-text-light);
+            opacity: 0.7; /* Légèrement estompé */
         }
         body.dark-mode .astro-card small {
-            color: #b0b0b0;
+            color: var(--color-text-dark);
+            opacity: 0.7;
         }
 
         .astro-card ul {
@@ -424,7 +495,7 @@
             border-radius: 50%;
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease; /* Animation for moon phase change */
+            transition: transform 0.3s ease;
         }
         .moon-display:hover {
             transform: scale(1.05);
@@ -440,22 +511,22 @@
             text-align: center;
             padding: 20px;
             margin-top: 40px;
-            background: #e5e5ea;
-            color: #8e8e93;
-            font-size: 0.85rem;
+            background: var(--color-secondary-light);
+            color: var(--color-text-light);
+            font-size: 0.9rem; /* Plus lisible */
             box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
         }
         body.dark-mode .footer {
-            background-color: #1c1c1e;
-            color: #f2f2f7;
+            background-color: var(--color-secondary-dark);
+            color: var(--color-text-dark);
         }
 
 
         /* Mobile Tabs */
         .tab-buttons {
-            display: none; /* Hidden by default, shown on mobile */
+            display: none;
             justify-content: space-around;
-            background-color: #ffffff;
+            background-color: var(--color-secondary-light);
             padding: 10px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
@@ -463,51 +534,50 @@
             gap: 10px;
         }
         body.dark-mode .tab-buttons {
-            background-color: #1c1c1e;
+            background-color: var(--color-secondary-dark);
         }
 
         .tab-button {
             flex-grow: 1;
             padding: 12px 15px;
-            border: 1px solid #e0e0e0;
+            border: 1px solid var(--color-border-light);
             border-radius: 8px;
-            background-color: #f9f9fb;
-            color: #555;
+            background-color: var(--color-primary-light);
+            color: var(--color-text-light);
             cursor: pointer;
             font-weight: 500;
             transition: all 0.2s ease;
             text-align: center;
-            font-size: 0.95rem;
+            font-size: 1rem; /* Plus lisible */
         }
         .tab-button:hover {
-            background-color: #e0e0e0;
+            background-color: var(--color-border-light);
         }
         .tab-button.active {
-            background-color: #007aff;
+            background-color: var(--color-main-blue);
             color: #fff;
-            border-color: #007aff;
+            border-color: var(--color-main-blue);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         .tab-button.active:hover {
-            background-color: #006ee6;
+            background-color: var(--color-main-blue-hover);
         }
         .tab-button:focus-visible {
-            outline: 2px solid #007aff;
+            outline: 2px solid var(--color-main-blue);
             outline-offset: 2px;
             border-radius: 8px;
         }
 
         .tab-content {
-            display: none; /* All tab contents hidden by default */
+            display: none;
         }
-        /* On larger screens, all sections are always displayed */
         @media (min-width: 769px) {
             .tab-content {
-                display: block !important; /* Override display:none for desktop */
+                display: block !important;
             }
         }
         .tab-content.active {
-            display: block; /* Active tab content shown on mobile */
+            display: block;
         }
 
         /* Media queries pour la responsivité */
@@ -515,71 +585,70 @@
             .weather-cards .card { width: calc(100% / 4 - 11.25px); }
         }
         @media (max-width: 1024px) {
-            .weather-cards .card { width: calc(100% / 3 - 10px); } /* Adjusted for 3 columns on tablets */
+            .weather-cards .card { width: calc(100% / 3 - 10px); }
             .container { flex-direction: column; padding: 20px; }
-            .weather-input { width: 100%; position: static; /* Remove sticky on smaller screens */ margin-bottom: 20px; }
+            .weather-input { width: 100%; position: static; margin-bottom: 20px; }
             .current-weather { flex-direction: column; align-items: flex-start; text-align: center; }
             .current-weather .icon { margin-top: 20px; }
-            .current-weather .icon img { max-width: 150px; } /* Reset to default large size for current weather */
-            .current-weather .icon h4 { margin-top: -10px; } /* Reset to default */
+            .current-weather .icon img { max-width: 150px; }
+            .current-weather .icon h4 { margin-top: -10px; }
         }
 
         @media (max-width: 768px) {
-            header { padding: 15px 0; } /* Adjusted padding for smaller screens */
-            header h1 { font-size: 2rem; } /* Slightly smaller title on mobile */
-            header .header-description { font-size: 1rem; } /* Slightly smaller description on mobile */
+            header { padding: 15px 0; }
+            header h1 { font-size: 2.2rem; } /* Ajusté */
+            header .header-description { font-size: 1.1rem; } /* Ajusté */
             .dark-mode-toggle { font-size: 1.6rem; right: 5%; }
             .container { padding: 15px; margin-top: 15px; }
             .weather-input { padding: 15px; }
-            .weather-input h3 { font-size: 1.1rem; }
+            .weather-input h3 { font-size: 1.2rem; } /* Ajusté */
             .weather-input input, .weather-input button { height: 44px; font-size: 0.95rem; }
             .weather-input input { margin: 8px 0 15px 0; }
             .weather-input .separator { margin: 20px 0; }
             .weather-input .separator::before { font-size: 0.9rem; }
 
             .current-weather { padding: 20px; }
-            .current-weather h2 { font-size: 1.8rem; }
+            .current-weather h2 { font-size: 2rem; } /* Ajusté */
             .current-weather h4 { font-size: 1rem; }
             .current-weather .icon img { max-width: 120px; }
             .current-weather .icon h4 { font-size: 1rem; }
             
-            .section-title { font-size: 1.5rem; margin: 20px 0 15px 0; }
+            .section-title { font-size: 1.6rem; margin: 20px 0 15px 0; } /* Ajusté */
 
             .weather-cards {
-                flex-wrap: nowrap; /* Force single row, enable scroll */
-                overflow-x: auto; /* Ensure horizontal scroll is enabled */
+                flex-wrap: nowrap;
+                overflow-x: auto;
                 padding-bottom: 10px;
                 -webkit-overflow-scrolling: touch;
-                scrollbar-width: thin; /* Show scrollbar for Firefox */
-                scrollbar-color: #007aff #f2f2f7; /* Custom scrollbar for Firefox */
+                scrollbar-width: thin;
+                scrollbar-color: var(--color-main-blue) var(--color-primary-light);
             }
-            /* Custom scrollbar for Webkit browsers */
             .weather-cards::-webkit-scrollbar {
                 height: 8px;
             }
             .weather-cards::-webkit-scrollbar-track {
-                background: #f2f2f7;
+                background: var(--color-primary-light);
                 border-radius: 10px;
             }
             .weather-cards::-webkit-scrollbar-thumb {
-                background: #007aff;
+                background: var(--color-main-blue);
                 border-radius: 10px;
             }
             body.dark-mode .weather-cards::-webkit-scrollbar-track {
-                background: #1c1c1e;
+                background: var(--color-secondary-dark);
             }
             body.dark-mode .weather-cards::-webkit-scrollbar-thumb {
-                background: #0a84ff;
+                background: var(--color-accent-dark);
             }
 
             .weather-cards .card {
                 flex: 0 0 auto;
-                min-width: 160px; /* Ensure cards are wide enough for content */
+                min-width: 160px;
                 padding: 15px;
-                margin-right: 15px; /* Add margin for consistent spacing in scroll */
+                margin-right: 15px;
             }
             .weather-cards .card:last-child {
-                margin-right: 0; /* No margin on the last card to avoid extra scroll space */
+                margin-right: 0;
             }
 
             .astro-details {
@@ -587,20 +656,19 @@
                 gap: 15px;
             }
             .astro-card { padding: 20px; }
-            .astro-card h6 { font-size: 1.1rem; }
-            .astro-card p, .astro-card li { font-size: 0.9rem; }
+            .astro-card h6 { font-size: 1.2rem; } /* Ajusté */
+            .astro-card p, .astro-card li { font-size: 0.95rem; } /* Ajusté */
             .moon-display { width: 100px; height: 100px; }
             #windy { height: 350px; margin-top: 20px; }
             iframe { height: 300px !important; }
             .footer { padding: 15px; margin-top: 30px; font-size: 0.8rem; }
 
             .tab-buttons {
-                display: flex; /* Show tabs on mobile */
+                display: flex;
             }
             .tab-content:not(.active) {
-                display: none; /* Hide non-active content when tabs are active */
+                display: none;
             }
-            /* Adjust padding for main container when tabs are present */
             .container {
                 padding-top: 0;
             }
@@ -684,7 +752,7 @@
         </div>
     </main>
     <footer class="footer" role="contentinfo">
-        <p>© 2025 Nyota-Sky par Obed Lusamba. Données vérifiées et fournies par OpenWeatherMap &amp; Open-Notify. Tous les droits réservés.</p>
+        <p>© 2025 Nyota-Sky par Obed Lusamba. Données vérifiées et par OpenWeatherMap &amp; Open-Notify. Tous les droits réservés.</p>
     </footer>
     <script>
         // DOM Elements
