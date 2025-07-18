@@ -581,14 +581,23 @@
         }
 
         /* Media queries pour la responsivité */
-        @media (max-width: 1400px) {
-            .weather-cards .card { width: calc(100% / 4 - 11.25px); }
-        }
         @media (max-width: 1024px) {
-            .weather-cards .card { width: calc(100% / 3 - 10px); }
-            .container { flex-direction: column; padding: 20px; }
-            .weather-input { width: 100%; position: static; margin-bottom: 20px; }
-            .current-weather { flex-direction: column; align-items: flex-start; text-align: center; }
+            .container {
+                flex-direction: column; /* Force stacking */
+                padding: 20px;
+                max-width: 100%; /* Allow container to take full width */
+                margin: 0 auto; /* Remove top/bottom margin, let padding handle it */
+            }
+            .weather-input {
+                width: 100%; /* Force full width for input section */
+                position: static; /* Remove sticky behavior */
+                margin-bottom: 20px; /* Add space between input and weather data */
+            }
+            .weather-data {
+                width: 100%; /* Force full width for weather data section */
+            }
+            .weather-cards .card { width: calc(100% / 3 - 10px); } /* Adjusted for 3 columns on tablets */
+            .current-weather { flex-direction: column; align-items: center; text-align: center; }
             .current-weather .icon { margin-top: 20px; }
             .current-weather .icon img { max-width: 150px; }
             .current-weather .icon h4 { margin-top: -10px; }
@@ -596,24 +605,24 @@
 
         @media (max-width: 768px) {
             header { padding: 15px 0; }
-            header h1 { font-size: 2.2rem; } /* Ajusté */
-            header .header-description { font-size: 1.1rem; } /* Ajusté */
+            header h1 { font-size: 2.2rem; }
+            header .header-description { font-size: 1.1rem; }
             .dark-mode-toggle { font-size: 1.6rem; right: 5%; }
-            .container { padding: 15px; margin-top: 15px; }
+            .container { padding: 15px; margin-top: 15px; } /* Tighter padding for mobile */
             .weather-input { padding: 15px; }
-            .weather-input h3 { font-size: 1.2rem; } /* Ajusté */
+            .weather-input h3 { font-size: 1.2rem; }
             .weather-input input, .weather-input button { height: 44px; font-size: 0.95rem; }
             .weather-input input { margin: 8px 0 15px 0; }
             .weather-input .separator { margin: 20px 0; }
             .weather-input .separator::before { font-size: 0.9rem; }
 
             .current-weather { padding: 20px; }
-            .current-weather h2 { font-size: 2rem; } /* Ajusté */
+            .current-weather h2 { font-size: 2rem; }
             .current-weather h4 { font-size: 1rem; }
             .current-weather .icon img { max-width: 120px; }
             .current-weather .icon h4 { font-size: 1rem; }
             
-            .section-title { font-size: 1.6rem; margin: 20px 0 15px 0; } /* Ajusté */
+            .section-title { font-size: 1.6rem; margin: 20px 0 15px 0; }
 
             .weather-cards {
                 flex-wrap: nowrap;
@@ -656,8 +665,8 @@
                 gap: 15px;
             }
             .astro-card { padding: 20px; }
-            .astro-card h6 { font-size: 1.2rem; } /* Ajusté */
-            .astro-card p, .astro-card li { font-size: 0.95rem; } /* Ajusté */
+            .astro-card h6 { font-size: 1.2rem; }
+            .astro-card p, .astro-card li { font-size: 0.95rem; }
             .moon-display { width: 100px; height: 100px; }
             #windy { height: 350px; margin-top: 20px; }
             iframe { height: 300px !important; }
