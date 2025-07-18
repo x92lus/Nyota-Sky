@@ -621,7 +621,27 @@
             .weather-input .separator { margin: 20px 0; }
             .weather-input .separator::before { font-size: 0.9rem; }
 
-            .current-weather { padding: 20px; }
+            .current-weather { 
+                padding: 20px; 
+                flex-direction: column; /* Ensure column direction on smaller mobile */
+                align-items: center; /* Center items */
+                text-align: center; /* Center text */
+                width: 100%; /* Ensure it takes full width */
+            }
+            .current-weather .details {
+                width: 100%; /* Ensure details section takes full width */
+                text-align: center; /* Center text within details */
+            }
+            .current-weather .details h2,
+            .current-weather .details h4 {
+                word-wrap: break-word; /* Ensure long words break */
+                overflow-wrap: break-word; /* Modern equivalent */
+                white-space: normal; /* Allow text to wrap naturally */
+            }
+            .current-weather .icon {
+                width: 100%; /* Ensure icon section takes full width */
+                margin-top: 20px; /* Add some space between details and icon */
+            }
             .current-weather h2 { font-size: 2rem; }
             .current-weather h4 { font-size: 1rem; }
             .current-weather .icon img { max-width: 120px; }
