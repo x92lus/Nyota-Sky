@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Nyota-Sky</title>
+    <!-- Préchargement des ressources clés -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
+    
+    <!-- Librairies externes pour la carte, les icônes -->
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+    <script src="https://api.windy.com/assets/map-forecast/libBoot.js"></script>
+    <script crossorigin="anonymous" src="https://kit.fontawesome.com/a6b0b5c0e4.js"></script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet"/>
+    <style>
+        /* Importation de la police Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Thème clair (par défaut) */
+        body {
+            background: #f2f2f7; /* iOS-like light background */
+            color: #1c1c1e; /* Dark text */
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Thème sombre */
+        body.dark-mode {
+            background-color: #000000; /* Pure black for dark mode */
+            color: #f2f2f7; /* Light text */
+        }
+        
+        body.dark-mode header,
+        body.dark-mode .footer {
+            background-color: #1c1c1e; /* Darker header/footer */
+        }
+        
+        body.dark-mode .weather-input .separator::before {
+            background: #000000; /* Match dark mode body background */
+            color: #8e8e93;
+        }
+        
+        body.dark-mode .card,
+        body.dark-mode .current-weather,
+        body.dark-mode .astro-card,
+        body.dark-mode .weather-input {
+            background-color: #1c1c1e; /* Dark card background */
+            color: #f2f2f7;
+            box-shadow: 0 4px 8px rgba(255, 255, 255, 0.05); /* Subtle light shadow for dark mode */
+        }
+        body.dark-mode .weather-input input, body.dark-mode .weather-input button {
+            border-color: #3a3a3c;
+            background-color: #2c2c2e;
+            color: #f2f2f7;
+        }
+        body.dark-mode .weather-input input:focus {
+            border-color: #0a84ff; /* iOS blue highlight */
+            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+        }
+        body.dark-mode .weather-input .search-btn {
+            background: #0a84ff; /* iOS blue */
+        }
+        body.dark-mode .weather-input .search-btn:hover {
+            background: #007aff;
+        }
+        body.dark-mode .weather-input .location-btn {
+            background: #3a3a3c; /* Dark grey */
+        }
+        body.dark-mode .weather-input .location-btn:hover {
+            background: #48484a;
+        }
+        body.dark-mode .current-weather {
+            background: #0a84ff; /* iOS blue */
+        }
+        body.dark-mode .days-forecast h5, body.dark-mode .astro-section h5 {
+            color: #f2f2f7;
+        }
+        body.dark-mode .astro-card h6 {
+            color: #0a84ff; /* iOS blue */
+            border-bottom-color: #3a3a3c;
+        }
+        body.dark-mode .astro-card p, body.dark-mode .astro-card li {
+            color: #e0e0e0;
+        }
+        body.dark-mode .moon-display {
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.05);
+        }
+        body.dark-mode .tab-button.active {
+            background-color: #1c1c1e;
+            color: #f2f2f7;
+        }
+        body.dark-mode .tab-button {
+            background-color: #000000;
+            border-color: #3a3a3c;
+            color: #8e8e93;
+        }
+        body.dark-mode #windy,
+        body.dark-mode iframe {
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.05);
+        }
+
+        /* Style du titre principal */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000; /* Ensure it stays on top */
+            color: #1c1c1e; /* Dark text for light mode */
+            padding: 25px 0;
+            text-align: center;
+            background: #f2f2f7; /* Match body background */
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08); /* Subtle bottom shadow */
+            font-weight: 700;
+        }
+        header h1 {
+            font-size: 2.5rem; /* Larger title */
+            margin-bottom: 5px;
+        }
+        header .header-description {
+            font-size: 1.1rem; /* Smaller subtitle */
+            color: #555;
+            font-weight: 400;
+        }
+        /* Correction pour la visibilité du titre en mode sombre */
+        body.dark-mode header h1,
+        body.dark-mode header .header-description {
+            color: #f2f2f7; /* Texte clair en mode sombre */
+        }
+
+
+        /* Style du bouton de changement de thème */
+        .dark-mode-toggle {
+            position: absolute;
+            background: #e0e0e0; /* Light grey background in light mode */
+            right: 5%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 1px solid #c0c0c0; /* Light border */
+            color: #1c1c1e; /* Dark text/icon in light mode */
+            cursor: pointer;
+            font-size: 1.8rem;
+            transition: all 0.2s ease;
+            padding: 10px; /* Increase touch target */
+            border-radius: 50%; /* Make it round */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .dark-mode-toggle:hover {
+            transform: translateY(-50%) scale(1.1);
+            background: #d0d0d0;
+        }
+        .dark-mode-toggle:focus-visible {
+            outline: 2px solid #007aff;
+            outline-offset: 2px;
+            border-radius: 50%;
+        }
+        body.dark-mode .dark-mode-toggle {
+            background-color: #2c2c2e; /* Darker background in dark mode */
+            border-color: #3a3a3a; /* Darker border */
+            color: #f2f2f7; /* Light text/icon in dark mode */
+            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+        }
+        body.dark-mode .dark-mode-toggle:hover {
+            background-color: #3a3a3a;
+            color: #0a84ff; /* iOS blue on hover in dark mode */
+        }
+
+
+        .container {
+            display: flex;
+            gap: 25px;
+            padding: 30px;
+            max-width: 1200px;
+            margin: 20px auto;
+            align-items: flex-start;
+        }
+
+        .weather-input {
+            width: 350px;
+            flex-shrink: 0;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            position: sticky; /* Make it sticky */
+            top: calc(25px + 2.2rem + 25px); /* Height of header + its padding */
+        }
+
+        .weather-input h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #1c1c1e;
+        }
+
+        .weather-input input, .weather-input button {
+            width: 100%;
+            height: 48px;
+            outline: none;
+            font-size: 1rem;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            padding: 0 15px; /* Added padding for touch target */
+        }
+
+        .weather-input input {
+            margin: 10px 0 20px 0;
+            background-color: #f9f9fb;
+            color: #1c1c1e;
+        }
+        .weather-input input:focus-visible {
+            border-color: #0a84ff;
+            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+            outline: none;
+        }
+        
+        .weather-input button {
+            cursor: pointer;
+            border: none;
+            color: #fff;
+            background: #007aff;
+            transition: background 0.2s ease, transform 0.1s ease;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 10px 15px; /* Increased padding for touch target */
+        }
+        
+        .weather-input .search-btn:hover {
+            background: #006ee6;
+            transform: translateY(-1px);
+        }
+        .weather-input .search-btn:focus-visible {
+            outline: 2px solid #007aff;
+            outline-offset: 2px;
+            border-radius: 10px;
+        }
+        
+        .weather-input .separator {
+            height: 1px;
+            width: 100%;
+            margin: 25px 0;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .weather-input .separator::before {
+            content: " ou ";
+            color: #8e8e93;
+            font-size: 1rem;
+            padding: 0 10px;
+            background: #f2f2f7;
+            position: absolute;
+        }
+        
+        .weather-input .location-btn {
+            background: #8e8e93;
+        }
+        
+        .weather-input .location-btn:hover {
+            background: #7c7c80;
+            transform: translateY(-1px);
+        }
+        .weather-input .location-btn:focus-visible {
+            outline: 2px solid #007aff;
+            outline-offset: 2px;
+            border-radius: 10px;
+        }
+
+        #windy {
+            width: 100%;
+            height: 450px;
+            margin-top: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .weather-data {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+        
+        .current-weather {
+            color: #1c1c1e;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease;
+        }
+        .current-weather:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .current-weather h2 { font-size: 2.2rem; margin-bottom: 8px; font-weight: 600; }
+        .current-weather h4 { font-size: 1.1rem; margin-top: 6px; font-weight: 400; color: #555; }
+        body.dark-mode .current-weather h4 { color: #e0e0e0; }
+        .current-weather .icon { text-align: center; }
+        .current-weather .icon img { max-width: 150px; margin-top: -20px; margin-bottom: -10px; }
+        .current-weather .icon h4 { margin-top: -10px; text-transform: capitalize; font-size: 1.1rem; font-weight: 500;}
+        
+        .section-title {
+            font-size: 1.7rem;
+            margin: 25px 0 20px 0;
+            color: #1c1c1e;
+            font-weight: 600;
+        }
+        body.dark-mode .section-title {
+            color: #f2f2f7;
+        }
+        
+        .weather-cards {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            padding-bottom: 10px;
+            transition: transform 0.2s ease;
+        }
+        
+        .card {
+            list-style: none;
+            color: #1c1c1e;
+            padding: 18px;
+            border-radius: 10px;
+            background: #ffffff;
+            width: calc(100% / 5 - 12px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .card:hover { 
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+        .card h3 { font-size: 1.1rem; margin-bottom: 8px; font-weight: 500; }
+        .card img { max-width: 70px; margin: 5px 0 -5px 0; loading: lazy; } /* Lazy load for weather icons */
+        .card h4 { font-size: 0.95rem; margin-top: 5px; font-weight: 400; color: #555;}
+        body.dark-mode .card h4 { color: #e0e0e0; }
+
+        .astro-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .astro-card {
+            background: #ffffff;
+            color: #1c1c1e;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .astro-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .astro-card h6 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 8px;
+            color: #007aff;
+            font-weight: 600;
+        }
+        
+        .astro-card p, .astro-card li {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #555;
+        }
+        
+        /* Style pour les heures du crépuscule astronomique */
+        .astro-card p strong {
+            font-size: 1.3rem; /* Larger for readability */
+            font-weight: 700; /* Extra bold */
+            color: #007aff; /* Blue color for emphasis */
+            display: inline-block; /* To allow margin/padding if needed */
+            margin-left: 5px;
+        }
+        body.dark-mode .astro-card p strong {
+            color: #94d0ff; /* Lighter blue for dark mode */
+        }
+
+        .astro-card small {
+            display: block; /* Ensure it's on its own line */
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #8e8e93;
+        }
+        body.dark-mode .astro-card small {
+            color: #b0b0b0;
+        }
+
+        .astro-card ul {
+            list-style-position: inside;
+            padding-left: 5px;
+        }
+
+        .moon-display {
+            width: 120px;
+            height: 120px;
+            margin: 20px auto;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease; /* Animation for moon phase change */
+        }
+        .moon-display:hover {
+            transform: scale(1.05);
+        }
+
+        .moon-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            background: #e5e5ea;
+            color: #8e8e93;
+            font-size: 0.85rem;
+            box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.05);
+        }
+        body.dark-mode .footer {
+            background-color: #1c1c1e;
+            color: #f2f2f7;
+        }
+
+
+        /* Mobile Tabs */
+        .tab-buttons {
+            display: none; /* Hidden by default, shown on mobile */
+            justify-content: space-around;
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        body.dark-mode .tab-buttons {
+            background-color: #1c1c1e;
+        }
+
+        .tab-button {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #f9f9fb;
+            color: #555;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+        .tab-button:hover {
+            background-color: #e0e0e0;
+        }
+        .tab-button.active {
+            background-color: #007aff;
+            color: #fff;
+            border-color: #007aff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .tab-button.active:hover {
+            background-color: #006ee6;
+        }
+        .tab-button:focus-visible {
+            outline: 2px solid #007aff;
+            outline-offset: 2px;
+            border-radius: 8px;
+        }
+
+        .tab-content {
+            display: none; /* All tab contents hidden by default */
+        }
+        /* On larger screens, all sections are always displayed */
+        @media (min-width: 769px) {
+            .tab-content {
+                display: block !important; /* Override display:none for desktop */
+            }
+        }
+        .tab-content.active {
+            display: block; /* Active tab content shown on mobile */
+        }
+
+        /* Media queries pour la responsivité */
+        @media (max-width: 1400px) {
+            .weather-cards .card { width: calc(100% / 4 - 11.25px); }
+        }
+        @media (max-width: 1024px) {
+            .weather-cards .card { width: calc(100% / 3 - 10px); } /* Adjusted for 3 columns on tablets */
+            .container { flex-direction: column; padding: 20px; }
+            .weather-input { width: 100%; position: static; /* Remove sticky on smaller screens */ margin-bottom: 20px; }
+            .current-weather { flex-direction: column; align-items: flex-start; text-align: center; }
+            .current-weather .icon { margin-top: 20px; }
+            .current-weather .icon img { max-width: 150px; } /* Reset to default large size for current weather */
+            .current-weather .icon h4 { margin-top: -10px; } /* Reset to default */
+        }
+
+        @media (max-width: 768px) {
+            header { padding: 15px 0; } /* Adjusted padding for smaller screens */
+            header h1 { font-size: 2rem; } /* Slightly smaller title on mobile */
+            header .header-description { font-size: 1rem; } /* Slightly smaller description on mobile */
+            .dark-mode-toggle { font-size: 1.6rem; right: 5%; }
+            .container { padding: 15px; margin-top: 15px; }
+            .weather-input { padding: 15px; }
+            .weather-input h3 { font-size: 1.1rem; }
+            .weather-input input, .weather-input button { height: 44px; font-size: 0.95rem; }
+            .weather-input input { margin: 8px 0 15px 0; }
+            .weather-input .separator { margin: 20px 0; }
+            .weather-input .separator::before { font-size: 0.9rem; }
+
+            .current-weather { padding: 20px; }
+            .current-weather h2 { font-size: 1.8rem; }
+            .current-weather h4 { font-size: 1rem; }
+            .current-weather .icon img { max-width: 120px; }
+            .current-weather .icon h4 { font-size: 1rem; }
+            
+            .section-title { font-size: 1.5rem; margin: 20px 0 15px 0; }
+
+            .weather-cards {
+                flex-wrap: nowrap !important;
+                overflow-x: auto; /* Ensure horizontal scroll is enabled */
+                padding-bottom: 10px;
+                -webkit-overflow-scrolling: touch;
+                /* Removed scrollbar-width: none; and ::-webkit-scrollbar display: none; to make scrollbar visible */
+            }
+            /* The default browser scrollbar will now be visible for .weather-cards on small screens */
+            .weather-cards .card {
+                flex: 0 0 auto;
+                min-width: 160px; /* Ensure cards are wide enough for content */
+                padding: 15px;
+            }
+
+            .astro-details {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .astro-card { padding: 20px; }
+            .astro-card h6 { font-size: 1.1rem; }
+            .astro-card p, .astro-card li { font-size: 0.9rem; }
+            .moon-display { width: 100px; height: 100px; }
+            #windy { height: 350px; margin-top: 20px; }
+            iframe { height: 300px !important; }
+            .footer { padding: 15px; margin-top: 30px; font-size: 0.8rem; }
+
+            .tab-buttons {
+                display: flex; /* Show tabs on mobile */
+            }
+            .tab-content:not(.active) {
+                display: none; /* Hide non-active content when tabs are active */
+            }
+            /* Adjust padding for main container when tabs are present */
+            .container {
+                padding-top: 0;
+            }
+        }
+    </style>
+    <link href="manifest.json" rel="manifest"/>
+    <meta content="#000000" name="theme-color"/>
+    <meta content="yes" name="mobile-web-app-capable"/>
+    <meta content="yes" name="apple-mobile-web-app-capable"/>
+</head>
+<body>
+    <header role="banner">
+        <h1>Nyota-Sky</h1>
+        <p class="header-description">Outil pour passionnés d'astronomie</p>
+        <button aria-label="Changer le thème clair/sombre" class="dark-mode-toggle" title="Changer le thème"><i class="fas fa-sun"></i></button>
+    </header>
+    <main role="main">
+        <div class="container">
+            <section class="weather-input" aria-labelledby="location-input-title">
+                <h3 id="location-input-title">Entrez une localisation</h3>
+                <input class="city-input" placeholder="Ex: Paris, New York, Tokyo" type="text" aria-label="Nom de la ville"/>
+                <button aria-label="Rechercher la météo" class="search-btn">Rechercher</button>
+                <div class="separator"></div>
+                <button aria-label="Utiliser la localisation actuelle" class="location-btn">Utiliser ma position</button>
+                <div id="windy"></div> <!-- Re-added Windy map container -->
+            </section>
+
+            <div class="weather-data">
+                <!-- Mobile Tabs for smaller screens -->
+                <div class="tab-buttons" role="tablist">
+                    <button class="tab-button active" data-tab="weather" role="tab" aria-selected="true" aria-controls="weather-tab-content">Météo</button> <!-- Set Weather tab active -->
+                    <button class="tab-button" data-tab="astro" role="tab" aria-selected="false" aria-controls="astro-tab-content">Astro</button>
+                    <button class="tab-button" data-tab="maps" role="tab" aria-selected="false" aria-controls="maps-tab-content">Cartes</button>
+                </div>
+
+                <section id="weather-tab-content" class="tab-content active" role="tabpanel" aria-labelledby="weather-tab-button"> <!-- Set Weather content active -->
+                    <article class="current-weather" aria-labelledby="current-weather-title">
+                        <h2 id="current-weather-title" style="display:none;">Météo Actuelle</h2>
+                        <!-- Les données météo actuelles seront injectées ici -->
+                    </article>
+                    <h5 class="section-title" id="forecast-title">Prévisions Météo sur 5 Jours</h5>
+                    <ul class="weather-cards" aria-labelledby="forecast-title">
+                        <!-- Les cartes de prévisions seront injectées ici -->
+                    </ul>
+                </section>
+
+                <section id="astro-tab-content" class="tab-content" role="tabpanel" aria-labelledby="astro-tab-button">
+                    <h5 class="section-title" id="astro-data-title">Ciel Nocturne &amp; Données Astro pour le <span id="astroDate"></span></h5>
+                    <div class="astro-details" aria-labelledby="astro-data-title">
+                        <article class="astro-card" aria-labelledby="moon-phase-title">
+                            <h6 id="moon-phase-title"><i class="fas fa-moon"></i> Phase de la Lune</h6>
+                            <div style="text-align:center;margin-top:1rem;">
+                                <label for="dateInput" style="margin-top: 10px; display: block;">Sélectionnez une date pour l'astro:</label>
+                                <input class="city-input" id="dateInput" type="date" aria-label="Sélectionner une date pour les données astronomiques"/>
+                            </div>
+                            <div class="moon-display" id="moonPhaseSVGContainer" style="width: 120px; height: 120px; margin: 20px auto;"></div>
+                            <p id="moon-phase-result" style="text-align:center;font-weight:bold;margin-top:0.5rem;">Phase lunaire : --</p>
+                        </article>
+                        <article class="astro-card" aria-labelledby="twilight-title">
+                            <h6 id="twilight-title"><i class="fas fa-star"></i> Crépuscule Astronomique</h6>
+                            <p>C'est le moment où le ciel est le plus noir, parfait pour voir les étoiles !</p>
+                            <p>Le ciel devient super sombre à partir de : <strong id="astronomicalTwilightStart">--</strong></p>
+                            <p>Et il reste super sombre jusqu'à : <strong id="astronomicalTwilightEnd">--</strong></p>
+                            <small>(C'est le meilleur moment pour chercher les étoiles et les planètes !)</small>
+                        </article>
+                        <!-- Section des conseils d'observation personnalisés supprimée -->
+                    </div>
+                </section>
+
+                <section id="maps-tab-content" class="tab-content" role="tabpanel" aria-labelledby="maps-tab-button">
+                    <div style="margin-top:2rem;">
+                        <h6 class="section-title">Carte du ciel en direct (Stellarium)</h6>
+                        <iframe height="500" loading="lazy" src="https://stellarium-web.org" style="border:none;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);" width="100%" title="Carte du ciel en direct Stellarium"></iframe>
+                    </div>
+                    <div style="margin-top:2rem;">
+                        <h6 class="section-title">Carte de la pollution lumineuse</h6>
+                        <iframe height="400" loading="lazy" src="https://www.lightpollutionmap.info/#zoom=3&amp;lat=0&amp;lon=0" style="border:none;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);" width="100%" title="Carte de la pollution lumineuse"></iframe>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+    <footer class="footer" role="contentinfo">
+        <p>© 2025 Nyota-Sky par Obed Lusamba. Données vérifiées et fournies par OpenWeatherMap &amp; Open-Notify. Tous les droits réservés.</p>
+    </footer>
+    <script>
+        // DOM Elements
+        const cityInput = document.querySelector(".city-input");
+        const dateInput = document.getElementById("dateInput");
+        const searchButton = document.querySelector(".search-btn");
+        const locationButton = document.querySelector(".location-btn");
+        const weatherCardsDiv = document.querySelector(".weather-cards");
+        const currentWeatherDiv = document.querySelector(".current-weather");
+
+        // Astro DOM Elements
+        const astroDateDisplay = document.getElementById("astroDate");
+        const moonPhaseSVGContainer = document.getElementById('moonPhaseSVGContainer');
+        const moonPhaseText = document.getElementById('moon-phase-result');
+        const astronomicalTwilightEnd = document.getElementById('astronomicalTwilightEnd');
+        const astronomicalTwilightStart = document.getElementById('astronomicalTwilightStart');
+
+        // Mobile Tabs DOM Elements
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // API Keys
+        const OWM_API_KEY = "eb25bb98e70091ae7787a643b17b1686"; // OpenWeatherMap API key
+        const WINDY_API_KEY = "H3MzWInDcItupZcD6PvvOdQ92hG6mNKw"; // Windy API key
+
+        // Set default date to today
+        const today = new Date();
+        dateInput.value = today.toISOString().split('T')[0];
+
+        // --- Weather Functions ---
+        const createWeatherCard = (cityName, weatherItem, index) => {
+            const tempCelsius = (weatherItem.main.temp - 273.15).toFixed(2);
+            const weatherIcon = `https://openweathermap.org/img/wn/${weatherItem.weather[0].icon}@2x.png`;
+            const weatherDescription = weatherItem.weather[0].description;
+            const date = weatherItem.dt_txt.split(" ")[0];
+
+            if (index === 0) { // Main weather card (current weather)
+                return `
+                    <div class="details">
+                        <h2>${cityName} (${date})</h2>
+                        <h4>Température: ${tempCelsius}°C</h4>
+                        <h4>Vent: ${weatherItem.wind.speed} M/s</h4>
+                        <h4>Humidité: ${weatherItem.main.humidity}%</h4>
+                    </div>
+                    <div class="icon">
+                        <img src="${weatherIcon}" alt="Icône météo: ${weatherDescription}" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/150x150/cccccc/333333?text=Icone';">
+                        <h4>${weatherDescription}</h4>
+                    </div>`;
+            } else { // Forecast cards
+                return `
+                    <li class="card">
+                        <h3>(${date})</h3>
+                        <img src="${weatherIcon}" alt="Icône météo: ${weatherDescription}" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/70x70/cccccc/333333?text=Icone';">
+                        <h4>Temp: ${tempCelsius}°C</h4>
+                        <h4>Vent: ${weatherItem.wind.speed} M/s</h4>
+                        <h4>Humidité: ${weatherItem.main.humidity}%</h4>
+                    </li>`;
+            }
+        };
+        
+        const getWeatherDetails = (cityName, lat, lon) => {
+            const WEATHER_API_URL = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${OWM_API_KEY}&lang=fr`;
+            
+            fetch(WEATHER_API_URL).then(res => res.json()).then(data => {
+                // Store full forecast data globally for advice generation
+                window.currentForecastData = data.list;
+                window.currentCityName = cityName; // Store current city name
+
+                const uniqueForecastDays = [];
+                const fiveDaysForecast = data.list.filter(forecast => {
+                    const forecastDate = new Date(forecast.dt_txt).getDate();
+                    if (!uniqueForecastDays.includes(forecastDate)) {
+                        return uniqueForecastDays.push(forecastDate);
+                    }
+                });
+
+                cityInput.value = "";
+                currentWeatherDiv.innerHTML = "";
+                weatherCardsDiv.innerHTML = "";
+
+                fiveDaysForecast.forEach((weatherItem, index) => {
+                    const html = createWeatherCard(cityName, weatherItem, index);
+                    if (index === 0) {
+                        currentWeatherDiv.insertAdjacentHTML("beforeend", html);
+                    } else {
+                        weatherCardsDiv.insertAdjacentHTML("beforeend", html);
+                    }
+                });
+
+                // Update map and astro data
+                getAstroData(cityName, lat, lon, data.list);
+                // Apply automatic theme after getting location and sun times
+                applyAutomaticTheme(lat, lon);
+
+            }).catch(() => {
+                alert("Une erreur est survenue lors de la récupération des prévisions météo !");
+            });
+        };
+
+        const getCityCoordinates = () => {
+            const cityName = cityInput.value.trim();
+            if (cityName === "") return;
+            const GEOCODING_API_URL = `https://api.openweathermap.org/geo/1.0/direct?q=${cityName}&limit=1&appid=${OWM_API_KEY}`;
+            
+            fetch(GEOCODING_API_URL).then(res => res.json()).then(data => {
+                if (!data.length) return alert(`Aucune coordonnée trouvée pour ${cityName}`);
+                const { lat, lon, name } = data[0];
+                getWeatherDetails(name, lat, lon);
+            }).catch(() => {
+                alert("Une erreur est survenue lors de la récupération des coordonnées !");
+            });
+        };
+
+        const getUserCoordinates = () => {
+            // First, load with Kinshasa's data
+            getWeatherDetails("Kinshasa", -4.3224, 15.3070); // Kinshasa coordinates
+            window.currentLat = -4.3224;
+            window.currentLon = 15.3070;
+            window.currentCityName = "Kinshasa"; // Set default city name
+
+            // Then, try to get user's actual position
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    const { latitude, longitude } = position.coords;
+                    const REVERSE_GEOCODING_URL = `https://api.openweathermap.org/geo/1.0/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=${OWM_API_KEY}`;
+                    fetch(REVERSE_GEOCODING_URL).then(res => res.json()).then(data => {
+                        const { name } = data[0];
+                        getWeatherDetails(name, latitude, longitude); // Update with actual user location
+                        window.currentLat = latitude;
+                        window.currentLon = longitude;
+                        window.currentCityName = name; // Update current city name
+                    }).catch(() => {
+                        alert("Une erreur est survenue lors de la récupération du nom de la ville pour votre position actuelle. Les données de Kinshasa restent affichées.");
+                    });
+                },
+                error => {
+                    if (error.code === error.PERMISSION_DENIED) {
+                        alert("La demande de géolocalisation a été refusée. Les données de Kinshasa sont affichées par défaut.");
+                    } else {
+                        alert("Une erreur est survenue lors de la récupération de votre position. Les données de Kinshasa sont affichées par défaut.");
+                    }
+                    // No need to call getWeatherDetails again here, as Kinshasa data is already loaded
+                }
+            );
+        };
+        
+        // --- Astronomical Functions ---
+        const getAstroData = (cityName, lat, lon, forecastData) => {
+            const selectedDate = new Date(dateInput.value);
+            astroDateDisplay.textContent = selectedDate.toLocaleDateString('fr-FR');
+
+            // Moon Phase
+            const moon = getMoonPhase(selectedDate);
+            drawMoonPhaseSVG(moon.fraction);
+            moonPhaseText.textContent = `Phase lunaire : ${moon.name}`;
+
+            // Twilight Times
+            const sunTimes = getSunTimes(selectedDate, lat, lon);
+            astronomicalTwilightEnd.textContent = sunTimes.astronomicalTwilightEnd;
+            astronomicalTwilightStart.textContent = sunTimes.astronomicalTwilightStart;
+        };
+        
+        function toRadians(degrees) { return degrees * Math.PI / 180; }
+        function toDegrees(radians) { return radians * 180 / Math.PI; }
+
+        function getJulianDay(date) {
+            // Adjust to UTC midnight for consistent Julian Day calculation
+            const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            return (utcDate.getTime() / 86400000) + 2440587.5;
+        }
+
+        function getMoonPhase(date) {
+            const JD = getJulianDay(date);
+            const daysSinceNewMoon = JD - 2451550.1; // J2000.0 new moon
+            const newMoons = daysSinceNewMoon / 29.53058867; // Synodic month length
+            let phase = newMoons - Math.floor(newMoons);
+            if (phase < 0) phase += 1;
+
+            let phaseName = "";
+            if (phase < 0.03 || phase > 0.97) phaseName = "Nouvelle Lune";
+            else if (phase < 0.22) phaseName = "Premier Croissant";
+            else if (phase < 0.28) phaseName = "Premier Quartier";
+            else if (phase < 0.47) phaseName = "Lune Gibbeuse Croissante";
+            else if (phase < 0.53) phaseName = "Pleine Lune";
+            else if (phase < 0.72) phaseName = "Lune Gibbeuse Décroissante";
+            else if (phase < 0.78) phaseName = "Dernier Quartier";
+            else phaseName = "Dernier Croissant";
+            
+            return { name: phaseName, fraction: phase };
+        }
+
+        function drawMoonPhaseSVG(phaseFraction) {
+            const size = 120;
+            const r = size / 2;
+            const cx = r;
+            const cy = r;
+            moonPhaseSVGContainer.innerHTML = '';
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+            svg.setAttribute("class", "moon-svg");
+
+            const lightFill = body.classList.contains('dark-mode') ? "#f2f2f7" : "#1c1c1e"; // Light part of the moon
+            const darkFill = body.classList.contains('dark-mode') ? "#000000" : "#e5e5ea"; // Dark part of the moon (shadow/background)
+
+            const moonCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            moonCircle.setAttribute("cx", cx);
+            moonCircle.setAttribute("cy", cy);
+            moonCircle.setAttribute("r", r);
+            moonCircle.setAttribute("fill", lightFill);
+            svg.appendChild(moonCircle);
+
+            if (Math.abs(phaseFraction - 0.5) > 0.02) {
+                 const shadow = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                 const xCurve = r * Math.cos(Math.PI * (phaseFraction * 2));
+                 const sweepFlag = phaseFraction > 0.5 ? 0 : 1;
+                 const pathData = `M ${cx},${cy-r} A ${r},${r} 0 1,${sweepFlag} ${cx},${cy+r} A ${Math.abs(xCurve)},${r} 0 1,${sweepFlag} ${cx},${cy-r} Z`;
+                 shadow.setAttribute("d", pathData);
+                 shadow.setAttribute("fill", darkFill);
+                 if(phaseFraction < 0.5){ // If waning, shadow moves from right to left, so flip horizontally
+                    shadow.setAttribute("transform", `translate(${size}, 0) scale(-1, 1)`);
+                    shadow.setAttribute("transform-origin", `${r} ${r}`);
+                 }
+                 svg.appendChild(shadow);
+            }
+            if (phaseFraction < 0.02 || phaseFraction > 0.98){ // For new moon, completely dark
+                 const newMoonCover = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                 newMoonCover.setAttribute("cx",cx);
+                 newMoonCover.setAttribute("cy",cy);
+                 newMoonCover.setAttribute("r",r);
+                 newMoonCover.setAttribute("fill", darkFill);
+                 svg.appendChild(newMoonCover);
+            }
+            moonPhaseSVGContainer.appendChild(svg);
+        }
+
+        function getSunTimes(date, latitude, longitude) {
+            const JD = getJulianDay(new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+            const n = JD - 2451545.0; // Days since J2000.0
+            const L = (280.460 + 0.9856474 * n) % 360; // Mean longitude of the Sun
+            const g = (357.528 + 0.9856003 * n) % 360; // Mean anomaly of the Sun
+            const ec = 23.439 - 0.0000004 * n; // Obliquity of the ecliptic
+            const lambda = L + 1.915 * Math.sin(toRadians(g)) + 0.020 * Math.sin(toRadians(2*g)); // Ecliptic longitude
+            const decl = toDegrees(Math.asin(Math.sin(toRadians(ec)) * Math.sin(toRadians(lambda)))); // Sun declination
+            
+            const getHourAngleForAngle = (angle, lat, dec) => {
+                const cos_H = (Math.sin(toRadians(angle)) - Math.sin(toRadians(lat)) * Math.sin(toRadians(dec))) / (Math.cos(toRadians(lat)) * Math.cos(toRadians(dec)));
+                if (cos_H < -1 || cos_H > 1) return null; // Sun never rises/sets or always up/down
+                return toDegrees(Math.acos(cos_H));
+            };
+
+            const H_astronomical = getHourAngleForAngle(-18, latitude, decl); // Astronomical twilight is at -18 degrees
+            
+            if (H_astronomical === null) return { astronomicalTwilightEnd: "N/A", astronomicalTwilightStart: "N/A", sunrise: "N/A", sunset: "N/A" };
+            
+            const J_transit = JD + (0.0053 * Math.sin(toRadians(g))) - (0.0069 * Math.sin(toRadians(2 * lambda))); // Solar transit Julian Day
+            
+            const J_astronomical_set = J_transit + (H_astronomical / 360);
+            const J_astronomical_rise = J_transit - (H_astronomical / 360);
+
+            const H_civil = getHourAngleForAngle(-6, latitude, decl); // Civil twilight is at -6 degrees
+            const J_civil_set = J_transit + (H_civil / 360);
+            const J_civil_rise = J_transit - (H_civil / 360);
+
+
+            const toLocalTime = (J, lon) => {
+                // Convert Julian Day to local time (hours and minutes)
+                const T = ((J - JD) - (lon / 360)) * 1440; // Minutes from UTC midnight
+                let hours = Math.floor(T / 60);
+                let minutes = Math.round(T % 60);
+                if (minutes === 60) { minutes = 0; hours += 1; }
+                hours = (hours + 24) % 24; // Ensure hours are within 0-23
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            };
+
+            const toDateObject = (J, lon) => {
+                // Convert Julian Day to a local Date object
+                const totalMinutes = ((J - JD) - (lon / 360)) * 1440;
+                const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                localDate.setMinutes(localDate.getMinutes() + totalMinutes);
+                return localDate;
+            };
+            
+            return {
+                astronomicalTwilightEnd: toLocalTime(J_astronomical_set, longitude),
+                astronomicalTwilightStart: toLocalTime(J_astronomical_rise, longitude),
+                sunrise: toDateObject(J_civil_rise, longitude),
+                sunset: toDateObject(J_civil_set, longitude)
+            };
+        }
+        
+        // --- Windy Map ---
+        let windyAPI;
+        windyInit({ key: WINDY_API_KEY, lat: -4.3224, lon: 15.3070, zoom: 6 }, api => { // Default to Kinshasa
+            windyAPI = api;
+        });
+
+        const updateMap = (lat, lon) => {
+            if (windyAPI && windyAPI.map) {
+                windyAPI.map.panTo([lat, lon]);
+            }
+        };
+        
+        // --- Dark Mode ---
+        const darkModeToggle = document.querySelector('.dark-mode-toggle');
+        const body = document.body;
+        const icon = darkModeToggle.querySelector('i');
+
+        const enableDarkMode = () => {
+            body.classList.add('dark-mode');
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+            localStorage.setItem('darkMode', 'enabled');
+            if(window.currentLat) drawMoonPhaseSVG(getMoonPhase(new Date(dateInput.value)).fraction);
+        };
+
+        const disableDarkMode = () => {
+            body.classList.remove('dark-mode');
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+            localStorage.setItem('darkMode', 'disabled');
+            if(window.currentLat) drawMoonPhaseSVG(getMoonPhase(new Date(dateInput.value)).fraction);
+        };
+
+        // Function to apply theme based on system preference or time
+        const applyAutomaticTheme = (lat, lon) => {
+            const storedPreference = localStorage.getItem('darkMode');
+
+            if (storedPreference === 'enabled') {
+                enableDarkMode();
+            } else if (storedPreference === 'disabled') {
+                disableDarkMode();
+            } else {
+                // No manual preference, check system preference
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    enableDarkMode();
+                } else {
+                    // Fallback to time-based if no system preference or light system preference
+                    const now = new Date();
+                    const sunTimes = getSunTimes(now, lat, lon);
+                    
+                    if (sunTimes.sunrise === "N/A" || sunTimes.sunset === "N/A") {
+                        disableDarkMode(); // Default to light if sun times unavailable
+                        return;
+                    }
+
+                    if (now > sunTimes.sunset || now < sunTimes.sunrise) {
+                        enableDarkMode(); // It's night
+                    } else {
+                        disableDarkMode(); // It's day
+                    }
+                }
+            }
+        };
+        
+        darkModeToggle.addEventListener('click', () => {
+            // User clicks, override automatic setting and store preference
+            if (body.classList.contains('dark-mode')) {
+                disableDarkMode();
+            } else {
+                enableDarkMode();
+            }
+        });
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            // Only react to system changes if no manual override is active
+            if (localStorage.getItem('darkMode') === null) {
+                if (event.matches) {
+                    enableDarkMode();
+                } else {
+                    disableDarkMode();
+                }
+            }
+        });
+
+        // --- Mobile Tabs Logic ---
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.dataset.tab;
+
+                // Deactivate all buttons and content
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.setAttribute('aria-selected', 'false');
+                });
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                // Activate clicked button and corresponding content
+                button.classList.add('active');
+                button.setAttribute('aria-selected', 'true');
+                document.getElementById(`${targetTab}-tab-content`).classList.add('active');
+            });
+        });
+
+        // --- Event Listeners & Initial Load ---
+        searchButton.addEventListener("click", getCityCoordinates);
+        locationButton.addEventListener("click", getUserCoordinates);
+        cityInput.addEventListener("keyup", e => e.key === "Enter" && getCityCoordinates());
+        dateInput.addEventListener("change", () => {
+            if (window.currentLat && window.currentLon) {
+                getAstroData(window.currentCityName, window.currentLat, window.currentLon, window.currentForecastData);
+            }
+        });
+        
+        // Initial load: Get user coordinates if allowed, otherwise default to Kinshasa
+        getUserCoordinates();
+    </script>
+    <!-- Service worker script (kept as it was in the original file) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service worker registered:', reg.scope))
+                .catch(err => console.error('Service worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
