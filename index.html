@@ -546,17 +546,40 @@
             .section-title { font-size: 1.5rem; margin: 20px 0 15px 0; }
 
             .weather-cards {
-                flex-wrap: nowrap !important;
+                flex-wrap: nowrap; /* Force single row, enable scroll */
                 overflow-x: auto; /* Ensure horizontal scroll is enabled */
                 padding-bottom: 10px;
                 -webkit-overflow-scrolling: touch;
-                /* Removed scrollbar-width: none; and ::-webkit-scrollbar display: none; to make scrollbar visible */
+                scrollbar-width: thin; /* Show scrollbar for Firefox */
+                scrollbar-color: #007aff #f2f2f7; /* Custom scrollbar for Firefox */
             }
-            /* The default browser scrollbar will now be visible for .weather-cards on small screens */
+            /* Custom scrollbar for Webkit browsers */
+            .weather-cards::-webkit-scrollbar {
+                height: 8px;
+            }
+            .weather-cards::-webkit-scrollbar-track {
+                background: #f2f2f7;
+                border-radius: 10px;
+            }
+            .weather-cards::-webkit-scrollbar-thumb {
+                background: #007aff;
+                border-radius: 10px;
+            }
+            body.dark-mode .weather-cards::-webkit-scrollbar-track {
+                background: #1c1c1e;
+            }
+            body.dark-mode .weather-cards::-webkit-scrollbar-thumb {
+                background: #0a84ff;
+            }
+
             .weather-cards .card {
                 flex: 0 0 auto;
                 min-width: 160px; /* Ensure cards are wide enough for content */
                 padding: 15px;
+                margin-right: 15px; /* Add margin for consistent spacing in scroll */
+            }
+            .weather-cards .card:last-child {
+                margin-right: 0; /* No margin on the last card to avoid extra scroll space */
             }
 
             .astro-details {
